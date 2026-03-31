@@ -4,117 +4,224 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Datastructure Visualizer</title>
+    <title>DSA Visualizer</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;500;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #2563eb; --secondary: #64748b; --accent: #ef4444; }
-        body { background-color: #f8fafc; font-family: 'Inter', sans-serif; }
-        .sidebar { height: 100vh; background: #1e293b; color: white; padding: 20px; position: fixed; width: 250px; }
-        .main-content { margin-left: 260px; padding: 40px; }
-        .bar { 
-            display: inline-block; 
-            width: 30px; 
-            margin: 0 2px; 
-            background: var(--primary); 
-            transition: height 0.2s, background-color 0.2s;
-            border-radius: 4px 4px 0 0;
-        }
-        .bar-comparing { background-color: #f59e0b !important; }
-        .bar-swapping { background-color: var(--accent) !important; }
-        .control-panel { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); margin-bottom: 30px; }
-    </style>
+    :root {
+        --bg-dark: #0f172a;
+        --card-bg: #1e293b;
+        --accent: #38bdf8;
+        --text-main: #f1f5f9;
+        --text-muted: #94a3b8;
+    }
+    body { 
+        background-color: var(--bg-dark); 
+        color: var(--text-main);
+        font-family: 'Inter', sans-serif;
+        margin: 0;
+    }
+    .sidebar {
+        width: 260px;
+        height: 100vh;
+        position: fixed;
+        background: #020617;
+        border-right: 1px solid #1e293b;
+        padding: 2rem;
+        z-index: 100;
+    }
+    .main-content { 
+        margin-left: 260px; 
+        padding: 2rem;
+        min-height: 100vh;
+    }
+    .viz-container {
+        background: #020617;
+        border-radius: 16px;
+        height: 350px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        padding: 20px;
+        border: 1px solid #334155;
+        margin-bottom: 2rem;
+    }
+    .bar {
+        width: 22px; /* Slightly wider for better visibility */
+        margin: 0 2px;
+        background: var(--accent);
+        border-radius: 4px 4px 0 0;
+        transition: background-color 0.1s;
+    }
+    .stats-card {
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 1.5rem;
+        border: 1px solid #334155;
+    }
+    .complexity-label {
+        color: var(--text-muted);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 5px;
+    }
+    .complexity-value {
+        font-family: 'JetBrains Mono', monospace;
+        color: var(--accent);
+        font-size: 1.2rem;
+        font-weight: 700;
+    }
+    input[type=range] {
+        accent-color: var(--accent);
+    }
+    label, .small {
+        color: var(--text-main) !important;
+    }
+</style>
 </head>
 <body>
-    {% csrf_token %}
+
+{% csrf_token %}
 
 <div class="sidebar">
-    <h3>DSA Visualization</h3>
-    <hr>
+    <!-- Removed the .js span here -->
+    <h2 class="fw-bold mb-5" style="color: var(--accent)">DSA Visualization</h2>
     <nav class="nav flex-column">
-        <a class="nav-link text-white active" href="#">Sorting</a>
-        <a class="nav-link text-white" href="#">Linked Lists</a>
-        <a class="nav-link text-white" href="#">Binary Trees</a>
-        <a class="nav-link text-white" href="#">Graphs</a>
+        <a class="nav-link text-white bg-primary mb-2 p-2 rounded" href="#">Sorting</a>
+        <a class="nav-link text-muted mb-2 p-2" href="#">Linked Lists</a>
+        <a class="nav-link text-muted mb-2 p-2" href="#">Binary Trees</a>
+        <a class="nav-link text-muted mb-2 p-2" href="#">Pathfinding</a>
     </nav>
 </div>
 
 <div class="main-content">
-    <h2 class="mb-4">Select Your Sorting Algorithm </h2>
-    <div class="control-panel">
-        <select id="algorithm-select" class="form-select d-inline-block w-auto ms-2">
-    <option value="bubble">Bubble Sort</option>
-    <option value="selection">Selection Sort</option>
-    <option value="insertion">Insertion Sort</option>
-    <option value="quick">Quick Sort (Divide & Conquer)</option>
-    <option value="merge">Merge Sort (Recursive)</option>
-</select>
-        
-        <button class="btn btn-outline-primary" onclick="generateArray()">Randomize</button>
-        <button class="btn btn-primary" onclick="startSorting()">Visualize Algorithm</button>
-        <input type="range" id="speed" min="10" max="500" value="100"> <small>Speed</small>
+    <div class="row mb-4 align-items-center">
+        <div class="col">
+            <h4 class="mb-0">Algorithm Workbench</h4>
+            <p class="text-muted small">Real-time Big O Complexity Analysis</p>
+        </div>
+        <div class="col-auto">
+            <button class="btn btn-outline-light btn-sm me-2" onclick="generateArray()">Randomize</button>
+            <select id="algorithm-select" class="btn btn-primary btn-sm" onchange="updateComplexityInfo()">
+                <option value="bubble">Bubble Sort</option>
+                <option value="selection">Selection Sort</option>
+                <option value="insertion">Insertion Sort</option>
+                <option value="quick">Quick Sort</option>
+                <option value="merge">Merge Sort</option>
+            </select>
+            <button class="btn btn-success btn-sm ms-2" onclick="startSorting()">Execute</button>
+        </div>
     </div>
 
-    <div id="array-container" class="d-flex align-items-end justify-content-center" style="height: 300px;"></div>
+    <div class="viz-container" id="array-container"></div>
+
+    <div class="row g-4">
+        <div class="col-md-8">
+            <div class="stats-card">
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="complexity-label">Time (Avg)</div>
+                        <div class="complexity-value" id="time-avg">-</div>
+                    </div>
+                    <div class="col-4 border-start border-end border-secondary">
+                        <div class="complexity-label">Time (Worst)</div>
+                        <div class="complexity-value" id="time-worst">-</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="complexity-label">Space</div>
+                        <div class="complexity-value" id="space-comp">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 text-end">
+            <label class="small d-block mb-2">Visualization Speed</label>
+            <input type="range" id="speed" min="50" max="580" value="300" class="form-range w-100">
+        </div>
+    </div>
 </div>
 
-<script src="/static/visualizer/script.js"></script>
 <script>
-    
-    let currentArray = [];
-    const container = document.getElementById("array-container");
+let currentArray = [];
+const container = document.getElementById("array-container");
 
-    function generateArray() {
-        console.log("Generate Array Clicked"); // This confirms the button works
-        container.innerHTML = "";
-        currentArray = Array.from({length: 15}, () => Math.floor(Math.random() * 250) + 10);
-        renderBars(currentArray);
-    }
-
-    function renderBars(arr, comparing = [], swapping = []) {
-        container.innerHTML = "";
-        arr.forEach((value, index) => {
-            const bar = document.createElement("div");
-            bar.className = "bar";
-            bar.style.height = `${value}px`;
-            if (comparing.includes(index)) bar.classList.add("bar-comparing");
-            if (swapping.includes(index)) bar.classList.add("bar-swapping");
-            container.appendChild(bar);
-        });
-    }
-
-    async function startSorting() {
-    const speed = document.getElementById("speed").value;
-    const algorithm = document.getElementById("algorithm-select").value;
-    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-    const response = await fetch('/api/sort/', { // Generic endpoint
-        method: 'POST',
-        headers: { 
-            'Content-Type': 'application/json',
-            'X-CSRFToken': csrftoken 
-        },
-        body: JSON.stringify({ 
-            array: currentArray,
-            algorithm: algorithm 
-        })
-    });
-    
-    const data = await response.json();
-    
-    // Animation loop
-    for (let step of data.steps) {
-        renderBars(step.array, step.comparing || [], step.swapping || []);
-        // Adjusted timing: Quick/Merge have more steps, so we make them slightly faster
-        let waitTime = 600 - speed;
-        if (algorithm === 'merge' || algorithm === 'quick') waitTime = waitTime / 2;
-        
-        await new Promise(r => setTimeout(r, waitTime));
+function generateArray() {
+    container.innerHTML = "";
+    currentArray = [];
+    for (let i = 0; i < 25; i++) {
+        let value = Math.floor(Math.random() * 250) + 20;
+        currentArray.push(value);
     }
     renderBars(currentArray);
 }
 
-    // Initialize on load
-    window.onload = generateArray;
+function renderBars(arr, comparing = [], swapping = []) {
+    container.innerHTML = "";
+    arr.forEach((value, index) => {
+        const bar = document.createElement("div");
+        bar.className = "bar";
+        bar.style.height = `${value}px`;
+        
+        if (comparing.includes(index)) {
+            bar.style.background = "#f59e0b"; // Comparing (Orange)
+        } else if (swapping.includes(index)) {
+            bar.style.background = "#ef4444"; // Swapping (Red)
+        }
+        
+        container.appendChild(bar);
+    });
+}
+
+const complexityData = {
+    'bubble': { avg: 'O(n²)', worst: 'O(n²)', space: 'O(1)' },
+    'selection': { avg: 'O(n²)', worst: 'O(n²)', space: 'O(1)' },
+    'insertion': { avg: 'O(n²)', worst: 'O(n²)', space: 'O(1)' },
+    'quick': { avg: 'O(n log n)', worst: 'O(n²)', space: 'O(log n)' },
+    'merge': { avg: 'O(n log n)', worst: 'O(n log n)', space: 'O(n)' }
+};
+
+function updateComplexityInfo() {
+    const algo = document.getElementById("algorithm-select").value;
+    const info = complexityData[algo];
+    document.getElementById("time-avg").innerText = info.avg;
+    document.getElementById("time-worst").innerText = info.worst;
+    document.getElementById("space-comp").innerText = info.space;
+}
+
+async function startSorting() {
+    const speed = document.getElementById("speed").value;
+    const algorithm = document.getElementById("algorithm-select").value;
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    try {
+        const response = await fetch('/api/sort/', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json', 
+                'X-CSRFToken': csrftoken 
+            },
+            body: JSON.stringify({ array: currentArray, algorithm: algorithm })
+        });
+        
+        const data = await response.json();
+        
+        for (let step of data.steps) {
+            renderBars(step.array, step.comparing || [], step.swapping || []);
+            // Higher slider = less delay
+            let delay = 600 - speed;
+            await new Promise(r => setTimeout(r, delay));
+        }
+        renderBars(currentArray); // Reset colors at end
+    } catch (error) {
+        console.error("API Error:", error);
+    }
+}
+
+window.onload = () => {
+    generateArray();
+    updateComplexityInfo();
+};
 </script>
 </body>
 </html>
