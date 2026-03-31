@@ -45,6 +45,8 @@
     <option value="bubble">Bubble Sort</option>
     <option value="selection">Selection Sort</option>
     <option value="insertion">Insertion Sort</option>
+    <option value="quick">Quick Sort (Divide & Conquer)</option>
+    <option value="merge">Merge Sort (Recursive)</option>
 </select>
         
         <button class="btn btn-outline-primary" onclick="generateArray()">Randomize</button>
@@ -82,10 +84,10 @@
 
     async function startSorting() {
     const speed = document.getElementById("speed").value;
-    const algorithm = document.getElementById("algorithm-select").value; // Get selection
+    const algorithm = document.getElementById("algorithm-select").value;
     const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-    const response = await fetch('/api/sort/', { // We can rename this URL later to /api/sort/
+    const response = await fetch('/api/sort/', { // Generic endpoint
         method: 'POST',
         headers: { 
             'Content-Type': 'application/json',
@@ -93,15 +95,22 @@
         },
         body: JSON.stringify({ 
             array: currentArray,
-            algorithm: algorithm // Send the algorithm name
+            algorithm: algorithm 
         })
     });
     
     const data = await response.json();
+    
+    // Animation loop
     for (let step of data.steps) {
         renderBars(step.array, step.comparing || [], step.swapping || []);
-        await new Promise(r => setTimeout(r, 600 - speed));
+        // Adjusted timing: Quick/Merge have more steps, so we make them slightly faster
+        let waitTime = 600 - speed;
+        if (algorithm === 'merge' || algorithm === 'quick') waitTime = waitTime / 2;
+        
+        await new Promise(r => setTimeout(r, waitTime));
     }
+    renderBars(currentArray);
 }
 
     // Initialize on load
