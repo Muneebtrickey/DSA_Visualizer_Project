@@ -1,48 +1,47 @@
+let currentArray = [];
 const container = document.getElementById("array-container");
-let array = [];
 
 function generateArray() {
     container.innerHTML = "";
-    array = [];
+    currentArray = Array.from({length: 15}, () => Math.floor(Math.random() * 250) + 10);
+    renderBars(currentArray);
+}
 
-    for (let i = 0; i < 20; i++) {
-        let value = Math.floor(Math.random() * 100);
-        array.push(value);
-
-        let bar = document.createElement("div");
-        bar.classList.add("bar");
-        bar.style.height = value + "px";
-
+function renderBars(arr, comparing = [], swapping = []) {
+    container.innerHTML = "";
+    arr.forEach((value, index) => {
+        const bar = document.createElement("div");
+        bar.className = "bar";
+        bar.style.height = `${value}px`;
+        
+        if (comparing.includes(index)) bar.classList.add("bar-comparing");
+        if (swapping.includes(index)) bar.classList.add("bar-swapping");
+        
         container.appendChild(bar);
+    });
+}
+
+async function startSorting() {
+    const speed = document.getElementById("speed").value;
+    
+    // Get the CSRF token from the page
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    const response = await fetch('/api/bubble-sort/', {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken  // <--- This is the key!
+        },
+        body: JSON.stringify({ array: currentArray })
+    });
+    
+    const data = await response.json();
+    
+    for (let step of data.steps) {
+        renderBars(step.array, step.comparing, step.swapping);
+        await new Promise(r => setTimeout(r, 600 - speed));
     }
 }
 
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-async function bubbleSort() {
-    let bars = document.getElementsByClassName("bar");
-
-    for (let i = 0; i < array.length; i++) {
-        for (let j = 0; j < array.length - i - 1; j++) {
-
-            bars[j].style.background = "red";
-            bars[j + 1].style.background = "red";
-
-            await sleep(100);
-
-            if (array[j] > array[j + 1]) {
-                let temp = array[j];
-                array[j] = array[j + 1];
-                array[j + 1] = temp;
-
-                bars[j].style.height = array[j] + "px";
-                bars[j + 1].style.height = array[j + 1] + "px";
-            }
-
-            bars[j].style.background = "blue";
-            bars[j + 1].style.background = "blue";
-        }
-    }
-}
+generateArray();

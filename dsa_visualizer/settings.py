@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
     'visualizer',
     
 ]
@@ -117,3 +118,13 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+
+import os
+
+STATIC_URL = 'static/'
+
+# Add this line to tell Django where your app static files are
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'visualizer/static'),
+]

@@ -1,34 +1,102 @@
+{% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>DSA Visualizer</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro DSA Visualizer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body {
-            text-align: center;
+        :root { --primary: #2563eb; --secondary: #64748b; --accent: #ef4444; }
+        body { background-color: #f8fafc; font-family: 'Inter', sans-serif; }
+        .sidebar { height: 100vh; background: #1e293b; color: white; padding: 20px; position: fixed; width: 250px; }
+        .main-content { margin-left: 260px; padding: 40px; }
+        .bar { 
+            display: inline-block; 
+            width: 30px; 
+            margin: 0 2px; 
+            background: var(--primary); 
+            transition: height 0.2s, background-color 0.2s;
+            border-radius: 4px 4px 0 0;
         }
-
-        #array-container {
-            margin-top: 30px;
-        }
-
-        .bar {
-            display: inline-block;
-            width: 20px;
-            margin: 2px;
-            background-color: blue;
-        }
+        .bar-comparing { background-color: #f59e0b !important; }
+        .bar-swapping { background-color: var(--accent) !important; }
+        .control-panel { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); margin-bottom: 30px; }
     </style>
 </head>
 <body>
+    {% csrf_token %}
 
-<h1>Sorting Visualizer</h1>
+<div class="sidebar">
+    <h3>DSA Pro</h3>
+    <hr>
+    <nav class="nav flex-column">
+        <a class="nav-link text-white active" href="#">Sorting</a>
+        <a class="nav-link text-white" href="#">Linked Lists</a>
+        <a class="nav-link text-white" href="#">Binary Trees</a>
+        <a class="nav-link text-white" href="#">Graphs</a>
+    </nav>
+</div>
 
-<button onclick="generateArray()">Generate Array</button>
-<button onclick="bubbleSort()">Start Sorting</button>
+<div class="main-content">
+    <div class="control-panel">
+        <h2 class="mb-4">Sorting Visualizer (Bubble Sort)</h2>
+        <button class="btn btn-outline-primary" onclick="generateArray()">Randomize</button>
+        <button class="btn btn-primary" onclick="startSorting()">Visualize Algorithm</button>
+        <input type="range" id="speed" min="10" max="500" value="100"> <small>Speed</small>
+    </div>
 
-<div id="array-container"></div>
+    <div id="array-container" class="d-flex align-items-end justify-content-center" style="height: 300px;"></div>
+</div>
 
 <script src="/static/visualizer/script.js"></script>
+<script>
+    // Paste your entire script.js code here
+    let currentArray = [];
+    const container = document.getElementById("array-container");
 
+    function generateArray() {
+        console.log("Generate Array Clicked"); // This confirms the button works
+        container.innerHTML = "";
+        currentArray = Array.from({length: 15}, () => Math.floor(Math.random() * 250) + 10);
+        renderBars(currentArray);
+    }
+
+    function renderBars(arr, comparing = [], swapping = []) {
+        container.innerHTML = "";
+        arr.forEach((value, index) => {
+            const bar = document.createElement("div");
+            bar.className = "bar";
+            bar.style.height = `${value}px`;
+            if (comparing.includes(index)) bar.classList.add("bar-comparing");
+            if (swapping.includes(index)) bar.classList.add("bar-swapping");
+            container.appendChild(bar);
+        });
+    }
+
+    async function startSorting() {
+        const speed = document.getElementById("speed").value;
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        const response = await fetch('/api/bubble-sort/', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken 
+            },
+            body: JSON.stringify({ array: currentArray })
+        });
+        
+        const data = await response.json();
+        for (let step of data.steps) {
+            renderBars(step.array, step.comparing, step.swapping);
+            await new Promise(r => setTimeout(r, 600 - speed));
+        }
+        renderBars(currentArray);
+    }
+
+    // Initialize on load
+    window.onload = generateArray;
+</script>
 </body>
 </html>
