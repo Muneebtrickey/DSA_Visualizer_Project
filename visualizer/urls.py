@@ -3,5 +3,5 @@ from . import views
 
 urlpatterns = [
     path('', views.index, name='home'),
-    path('api/bubble-sort/', views.BubbleSortView.as_view(), name='bubble_sort_api'),
+    path('api/sort/', views.SortingView.as_view(), name='sorting_api'), # Changed to /api/sort/
 ]
