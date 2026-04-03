@@ -20,7 +20,7 @@ const speedInput = document.getElementById("speed");
 const metadata = {
     sorting: {
         title: "Sorting Visualizer",
-        desc: "Organize data using efficient comparison-based algorithms.",
+        desc: "Understand how sorting algorithms organize data step-by-step.",
         resource: "https://www.geeksforgeeks.org/sorting-algorithms/",
         algos: [
             { id: 'bubble', name: 'Bubble Sort', time: 'O(n²)', space: 'O(1)', desc: 'Repeatedly swaps adjacent elements if they are in the wrong order.' },
@@ -115,7 +115,7 @@ function updateInfo() {
         // Update "How it works" Image Trace
         const traceImg = document.getElementById('algo-trace-img');
         const formattedName = algo.name.replace(/ /g, '+');
-        traceImg.src = `https://via.placeholder.com/400x150/1e293b/38bdf8?text=${formattedName}+Animation`;
+        traceImg.src = `https://via.placeholder.com/400x150/0f172a/10b981?text=${formattedName}+Animation`;
         
         // Update Resource Links
         const resourceLinks = document.getElementById('resource-links').getElementsByTagName('a');
@@ -261,15 +261,15 @@ function renderTree() {
     container.innerHTML = "";
     const treeSvg = `
         <svg width="400" height="300" viewBox="0 0 400 300">
-            <line x1="200" y1="50" x2="100" y2="120" stroke="#38bdf8" stroke-width="2" />
-            <line x1="200" y1="50" x2="300" y2="120" stroke="#38bdf8" stroke-width="2" />
-            <circle cx="200" cy="50" r="20" fill="#6366f1" />
+            <line x1="200" y1="50" x2="100" y2="120" stroke="#2dd4bf" stroke-width="2" />
+            <line x1="200" y1="50" x2="300" y2="120" stroke="#2dd4bf" stroke-width="2" />
+            <circle cx="200" cy="50" r="20" fill="#10b981" />
             <text x="200" y="55" fill="white" text-anchor="middle" font-weight="bold">50</text>
             
-            <circle cx="100" cy="120" r="20" fill="#6366f1" />
+            <circle cx="100" cy="120" r="20" fill="#10b981" />
             <text x="100" y="125" fill="white" text-anchor="middle" font-weight="bold">30</text>
             
-            <circle cx="300" cy="120" r="20" fill="#6366f1" />
+            <circle cx="300" cy="120" r="20" fill="#10b981" />
             <text x="300" y="125" fill="white" text-anchor="middle" font-weight="bold">70</text>
         </svg>
     `;
