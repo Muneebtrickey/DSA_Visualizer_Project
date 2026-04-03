@@ -1,16 +1,22 @@
 {% load static %}
+<!-- 
+    DSA Lab - Data Structures & Algorithms Visualizer
+    A modern, interactive platform to understand complex algorithms step-by-step.
+-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DSA Visualizer Pro</title>
-    <!-- Modern UI Frameworks -->
+    <title>DSA Lab | Interactive Visualizer</title>
+    
+    <!-- UI Frameworks & Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     
     <style>
+        /* Color Palette and Global Styles */
         :root {
             --primary: #6366f1;
             --primary-hover: #4f46e5;
@@ -32,7 +38,7 @@
             overflow-x: hidden;
         }
 
-        /* Sidebar Styling */
+        /* Sidebar: Navigation for different DSA categories */
         .sidebar {
             width: 280px;
             height: 100vh;
@@ -85,7 +91,7 @@
             color: white;
         }
 
-        /* Main Content */
+        /* Main Content Layout */
         .main-content {
             margin-left: 280px;
             padding: 2rem;
@@ -99,7 +105,7 @@
             margin-bottom: 2rem;
         }
 
-        /* Visualization Area */
+        /* Visualization Canvas: Where the magic happens */
         .viz-stage {
             background: #020617;
             border-radius: 24px;
@@ -115,7 +121,7 @@
             overflow: hidden;
         }
 
-        /* Bars for Sorting/Searching */
+        /* Elements being visualized (Bars for sorting) */
         .bar {
             flex: 1;
             margin: 0 2px;
@@ -133,7 +139,7 @@
             color: var(--text-muted);
         }
 
-        /* Linked List / Tree Nodes */
+        /* Nodes for Linked Lists and Trees */
         .node {
             width: 50px;
             height: 50px;
@@ -149,13 +155,24 @@
             transition: all 0.3s ease;
         }
 
-        /* Controls */
+        /* Interaction Panel */
         .control-panel {
             background: var(--glass);
             backdrop-filter: blur(10px);
             border-radius: 20px;
             padding: 1.5rem;
             border: 1px solid var(--border);
+        }
+
+        /* Speed and Size Sliders */
+        .range-container {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .form-range::-webkit-slider-thumb {
+            background: var(--accent);
         }
 
         .form-select, .form-control {
@@ -184,7 +201,7 @@
             background: var(--primary-hover);
         }
 
-        /* Cards */
+        /* Complexity Info Cards */
         .info-card {
             background: var(--card-bg);
             border-radius: 20px;
@@ -202,13 +219,13 @@
             font-size: 0.9rem;
         }
 
-        /* Animation States */
+        /* Animation State Classes */
         .comparing { background: #f59e0b !important; transform: scaleY(1.05); }
         .swapping { background: #ef4444 !important; }
         .found { background: #22c55e !important; box-shadow: 0 0 20px #22c55e; }
         .range-highlight { background: rgba(56, 189, 248, 0.2) !important; }
 
-        /* Responsive */
+        /* Responsive adjustments */
         @media (max-width: 992px) {
             .sidebar { transform: translateX(-100%); }
             .main-content { margin-left: 0; }
@@ -219,69 +236,78 @@
 
 {% csrf_token %}
 
-<!-- Sidebar -->
+<!-- Sidebar Navigation -->
 <aside class="sidebar">
     <a href="/" class="sidebar-brand">
         <i class="bi bi-cpu text-accent"></i>
         <span>DSA Lab</span>
     </a>
 
+    <!-- Category: Algorithms -->
     <div class="nav-category">Algorithms</div>
-    <div class="nav flex-column">
-        <div class="nav-link active" onclick="switchTab('sorting'); event.currentTarget.classList.add('active')">
+    <div class="nav flex-column" id="nav-algorithms">
+        <div class="nav-link active" onclick="switchTab('sorting', this)">
             <i class="bi bi-sort-numeric-down"></i> Sorting
         </div>
-        <div class="nav-link" onclick="switchTab('searching'); event.currentTarget.classList.add('active')">
+        <div class="nav-link" onclick="switchTab('searching', this)">
             <i class="bi bi-search"></i> Searching
         </div>
     </div>
 
+    <!-- Category: Data Structures -->
     <div class="nav-category">Data Structures</div>
-    <div class="nav flex-column">
-        <div class="nav-link" onclick="switchTab('linkedlist'); event.currentTarget.classList.add('active')">
+    <div class="nav flex-column" id="nav-structures">
+        <div class="nav-link" onclick="switchTab('linkedlist', this)">
             <i class="bi bi-diagram-2"></i> Linked List
         </div>
-        <div class="nav-link" onclick="switchTab('stackqueue'); event.currentTarget.classList.add('active')">
+        <div class="nav-link" onclick="switchTab('stackqueue', this)">
             <i class="bi bi-layers"></i> Stack & Queue
         </div>
-        <div class="nav-link" onclick="switchTab('trees'); event.currentTarget.classList.add('active')">
+        <div class="nav-link" onclick="switchTab('trees', this)">
             <i class="bi bi-tree"></i> Binary Trees
         </div>
     </div>
 
+    <!-- Developer Section -->
     <div class="mt-auto pt-5">
         <div class="info-card p-3 text-center">
             <img src="https://via.placeholder.com/60" class="rounded-circle mb-2" alt="Profile">
-            <div class="small fw-bold">Developer Portfolio</div>
-            <a href="#" class="btn btn-sm btn-outline-light w-100 mt-2">View GitHub</a>
+            <div class="small fw-bold">Portfolio Link</div>
+            <a href="https://github.com" target="_blank" class="btn btn-sm btn-outline-light w-100 mt-2">View GitHub</a>
         </div>
     </div>
 </aside>
 
-<!-- Main Content -->
+<!-- Main Visualizer Area -->
 <main class="main-content">
     <header class="header-section">
         <div>
             <h2 id="view-title">Sorting Visualizer</h2>
             <p class="text-muted" id="view-desc">Understand how sorting algorithms organize data step-by-step.</p>
         </div>
-        <div class="d-flex gap-3">
-            <div class="control-panel d-flex gap-3 align-items-center py-2">
-                <div class="small text-muted">Speed</div>
-                <input type="range" id="speed" min="50" max="580" value="300" class="form-range" style="width: 100px;">
+        
+        <!-- Speed & Size Controls -->
+        <div class="d-flex gap-4">
+            <div class="control-panel d-flex gap-4 align-items-center py-2 px-4">
+                <div class="range-container">
+                    <label class="small text-muted" for="speed">Animation Speed</label>
+                    <input type="range" id="speed" min="50" max="600" value="300" class="form-range" style="width: 120px;">
+                </div>
                 <div class="vr"></div>
-                <div class="small text-muted">Size</div>
-                <input type="range" id="size" min="5" max="50" value="25" class="form-range" style="width: 100px;" onchange="initVisualization()">
+                <div class="range-container">
+                    <label class="small text-muted" for="size">Array Size</label>
+                    <input type="range" id="size" min="5" max="50" value="25" class="form-range" style="width: 120px;" oninput="initVisualization()">
+                </div>
             </div>
         </div>
     </header>
 
-    <!-- Visualization Stage -->
+    <!-- Visualization Stage (Injected by JS) -->
     <div class="viz-stage" id="viz-container">
         <!-- Bars or Nodes will be injected here -->
     </div>
 
-    <!-- Controls & Info -->
+    <!-- Interaction & Algorithm Settings -->
     <div class="row g-4">
         <div class="col-lg-8">
             <div class="control-panel">
@@ -295,20 +321,23 @@
                             <option value="merge">Merge Sort</option>
                         </select>
                     </div>
+                    <!-- Target Input for Searching -->
                     <div class="col-md-3" id="target-input-container" style="display: none;">
                         <input type="number" id="search-target" class="form-control" placeholder="Target Value">
                     </div>
+                    <!-- Execution Controls -->
                     <div class="col-md-5 d-flex gap-2">
                         <button class="btn btn-outline-light flex-grow-1" onclick="initVisualization()">
                             <i class="bi bi-arrow-clockwise"></i> Reset
                         </button>
-                        <button class="btn btn-primary flex-grow-1" onclick="executeAlgorithm()">
+                        <button id="execute-btn" class="btn btn-primary flex-grow-1" onclick="executeAlgorithm()">
                             <i class="bi bi-play-fill"></i> Execute
                         </button>
                     </div>
                 </div>
             </div>
         </div>
+        <!-- Algorithm Metrics -->
         <div class="col-lg-4">
             <div class="info-card">
                 <h6 class="mb-3">Complexity Analysis</h6>
@@ -324,6 +353,7 @@
         </div>
     </div>
 
+    <!-- Educational Content -->
     <div class="row mt-4 g-4">
         <div class="col-md-6">
             <div class="info-card">
@@ -331,20 +361,22 @@
                 <p class="text-muted small" id="algo-explanation">
                     Bubble Sort is the simplest sorting algorithm that works by repeatedly swapping the adjacent elements if they are in wrong order.
                 </p>
-                <img src="https://via.placeholder.com/400x150/1e293b/38bdf8?text=Algorithm+Trace" class="img-fluid rounded-3 mt-2" alt="Trace">
+                <div id="algo-image-container">
+                    <img id="algo-trace-img" src="https://via.placeholder.com/400x150/1e293b/38bdf8?text=Bubble+Sort+Animation" class="img-fluid rounded-3 mt-2" alt="Algorithm Trace">
+                </div>
             </div>
         </div>
         <div class="col-md-6">
             <div class="info-card">
                 <h6>Learning Resources</h6>
-                <div class="list-group list-group-flush bg-transparent">
-                    <a href="#" class="list-group-item bg-transparent text-white border-secondary px-0">
+                <div class="list-group list-group-flush bg-transparent" id="resource-links">
+                    <a href="https://www.geeksforgeeks.org/sorting-algorithms/" target="_blank" class="list-group-item bg-transparent text-white border-secondary px-0">
                         <i class="bi bi-journal-text me-2"></i> Documentation & Theory
                     </a>
-                    <a href="#" class="list-group-item bg-transparent text-white border-secondary px-0">
+                    <a href="https://github.com/williamfiset/Algorithms" target="_blank" class="list-group-item bg-transparent text-white border-secondary px-0">
                         <i class="bi bi-code-slash me-2"></i> Source Implementation
                     </a>
-                    <a href="#" class="list-group-item bg-transparent text-white border-secondary px-0">
+                    <a href="https://www.youtube.com/results?search_query=sorting+algorithms+visualized" target="_blank" class="list-group-item bg-transparent text-white border-secondary px-0">
                         <i class="bi bi-youtube me-2"></i> Video Tutorial
                     </a>
                 </div>
