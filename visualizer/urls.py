@@ -3,5 +3,6 @@ from . import views
 
 urlpatterns = [
     path('', views.index, name='home'),
-    path('api/sort/', views.SortingView.as_view(), name='sorting_api'), # Changed to /api/sort/
+    path('api/sort/', views.SortingView.as_view(), name='sorting_api'),
+    path('api/search/', views.SearchingView.as_view(), name='searching_api'),
 ]

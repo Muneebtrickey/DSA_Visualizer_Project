@@ -2,11 +2,12 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-# This is the part that was missing!
 def index(request):
+    """Main entry point for the visualizer application."""
     return render(request, 'visualizer/index.html')
 
 class SortingView(APIView):
+    """API for sorting algorithm steps."""
     def post(self, request):
         arr = request.data.get('array', [])
         algorithm = request.data.get('algorithm', 'bubble')
@@ -118,4 +119,46 @@ class SortingView(APIView):
                 steps.append({'array': arr.copy(), 'swapping': [j, j + 1]})
                 j -= 1
             arr[j + 1] = key
+        return steps
+
+class SearchingView(APIView):
+    """API for searching algorithm steps."""
+    def post(self, request):
+        arr = request.data.get('array', [])
+        target = request.data.get('target', 0)
+        algorithm = request.data.get('algorithm', 'linear')
+        steps = []
+
+        if algorithm == 'linear':
+            steps = self.linear_search(arr, target)
+        elif algorithm == 'binary':
+            # Binary search requires sorted array
+            sorted_arr = sorted(arr)
+            steps = self.binary_search(sorted_arr, target)
+        
+        return Response({"steps": steps})
+
+    def linear_search(self, arr, target):
+        steps = []
+        for i in range(len(arr)):
+            steps.append({'array': arr, 'comparing': [i]})
+            if arr[i] == target:
+                steps.append({'array': arr, 'found': [i]})
+                break
+        return steps
+
+    def binary_search(self, arr, target):
+        steps = []
+        low = 0
+        high = len(arr) - 1
+        while low <= high:
+            mid = (low + high) // 2
+            steps.append({'array': arr, 'comparing': [mid], 'range': [low, high]})
+            if arr[mid] == target:
+                steps.append({'array': arr, 'found': [mid]})
+                break
+            elif arr[mid] < target:
+                low = mid + 1
+            else:
+                high = mid - 1
         return steps
