@@ -208,14 +208,38 @@
 
         .btn-primary {
             background: var(--primary);
-            border: none;
-            border-radius: 10px;
-            padding: 0.6rem 1.5rem;
-            font-weight: 600;
+            color: white;
         }
 
         .btn-primary:hover {
             background: var(--primary-hover);
+            color: white;
+        }
+
+        /* Standardize all control buttons */
+        .control-panel .btn {
+            border-radius: 10px;
+            padding: 0.6rem 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-height: 45px;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            border: none;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-danger:disabled {
+            background: rgba(239, 68, 68, 0.2);
+            opacity: 0.6;
         }
 
         /* Complexity Info Cards */
@@ -329,7 +353,7 @@
         <div class="col-lg-8">
             <div class="control-panel">
                 <div class="row align-items-center g-3">
-                    <div class="col-md-4" id="algo-select-container">
+                    <div class="col-md-3" id="algo-select-container">
                         <select id="algorithm-select" class="form-select" onchange="updateInfo()">
                             <option value="bubble">Bubble Sort</option>
                             <option value="selection">Selection Sort</option>
@@ -339,18 +363,18 @@
                         </select>
                     </div>
                     <!-- Target Input for Searching -->
-                    <div class="col-md-3" id="target-input-container" style="display: none;">
-                        <input type="number" id="search-target" class="form-control" placeholder="Target Value">
+                    <div class="col-md-2" id="target-input-container" style="display: none;">
+                        <input type="number" id="search-target" class="form-control" placeholder="Val">
                     </div>
                     <!-- Execution Controls -->
-                    <div class="col-md-5 d-flex gap-2">
-                        <button class="btn btn-outline-light flex-grow-1" onclick="initVisualization()">
+                    <div class="col-md-7 d-flex gap-2 justify-content-md-end justify-content-center flex-wrap">
+                        <button class="btn btn-outline-light" onclick="initVisualization()" style="width: 100px; min-width: 100px;">
                             <i class="bi bi-arrow-clockwise"></i> Reset
                         </button>
-                        <button id="execute-btn" class="btn btn-primary flex-grow-1" onclick="executeAlgorithm()">
-                            <i class="bi bi-play-fill"></i> Execute
+                        <button id="execute-btn" class="btn btn-primary" onclick="executeAlgorithm()" style="width: 100px; min-width: 100px;">
+                            <i class="bi bi-play-fill"></i> Run
                         </button>
-                        <button id="stop-btn" class="btn btn-danger flex-grow-1" onclick="stopVisualization()" style="display: none;">
+                        <button id="stop-btn" class="btn btn-danger" onclick="stopVisualization()" style="width: 100px; min-width: 100px;">
                             <i class="bi bi-stop-fill"></i> Stop
                         </button>
                     </div>

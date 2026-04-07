@@ -1,14 +1,13 @@
 /**
  * DSA Lab - Frontend Logic
- * This script handles all interactive elements of the DSA Visualizer,
- * including tab switching, algorithm execution, and UI updates.
  */
 
 let currentTab = 'sorting';
 let currentArray = [];
-let isExecuting = false; // Flag to prevent multiple executions at once
-let stopRequested = false; // Flag to interrupt the animation loop
-let abortController = null; // To cancel fetch requests
+let isExecuting = false;
+let stopRequested = false;
+let abortController = null;
+let resolveSleep = null; // Used to wake up sleep immediately
 
 // DOM Elements
 const container = document.getElementById("viz-container");
@@ -17,9 +16,6 @@ const executeBtn = document.getElementById("execute-btn");
 const stopBtn = document.getElementById("stop-btn");
 const speedInput = document.getElementById("speed");
 
-/**
- * Metadata for each category including descriptions, complexities, and learning resources.
- */
 const metadata = {
     sorting: {
         title: "Sorting Visualizer",
@@ -69,22 +65,13 @@ const metadata = {
     }
 };
 
-/**
- * Switches between different DSA categories (tabs).
- * @param {string} tab - The category ID.
- * @param {HTMLElement} element - The clicked navigation element.
- */
 function switchTab(tab, element) {
     if (isExecuting) return; 
-
     currentTab = tab;
-    
     document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
     if (element) element.classList.add('active');
-    
     document.getElementById('view-title').innerText = metadata[tab].title;
     document.getElementById('view-desc').innerText = metadata[tab].desc;
-    
     const select = document.getElementById('algorithm-select');
     select.innerHTML = '';
     metadata[tab].algos.forEach(algo => {
@@ -93,16 +80,11 @@ function switchTab(tab, element) {
         opt.innerText = algo.name;
         select.appendChild(opt);
     });
-
     document.getElementById('target-input-container').style.display = tab === 'searching' ? 'block' : 'none';
-    
     updateInfo();
     initVisualization();
 }
 
-/**
- * Updates algorithm-specific information, complexity badges, and resources.
- */
 function updateInfo() {
     const algoId = document.getElementById('algorithm-select').value;
     const algo = metadata[currentTab].algos.find(a => a.id === algoId);
@@ -110,26 +92,19 @@ function updateInfo() {
         document.getElementById('time-comp').innerText = algo.time;
         document.getElementById('space-comp').innerText = algo.space;
         document.getElementById('algo-explanation').innerText = algo.desc;
-        
         const formattedName = algo.name.replace(/ /g, '+');
-        
         const resourceLinks = document.getElementById('resource-links').getElementsByTagName('a');
         resourceLinks[0].href = metadata[currentTab].resource;
         resourceLinks[2].href = `https://www.youtube.com/results?search_query=${formattedName}+visualized`;
     }
 }
 
-/**
- * Initializes the visualization stage with fresh data based on the current tab.
- */
 function initVisualization() {
     if (isExecuting) return;
-
     container.innerHTML = "";
     const sizeInput = document.getElementById('size');
     const size = sizeInput ? parseInt(sizeInput.value) : 25;
     currentArray = [];
-    
     if (currentTab === 'sorting' || currentTab === 'searching') {
         for (let i = 0; i < size; i++) {
             currentArray.push(Math.floor(Math.random() * 300) + 20);
@@ -153,28 +128,25 @@ function initVisualization() {
     }
 }
 
-/**
- * Helper to get the current animation delay from the speed slider.
- */
 function getDelay() {
-    const val = parseInt(speedInput.value);
-    return 650 - val;
+    return 650 - parseInt(speedInput.value);
 }
 
 /**
- * Interruptible sleep function.
+ * Interruptible sleep. If stopVisualization is called, this wakes up immediately.
  */
 function sleep(ms) {
     return new Promise(resolve => {
-        const timeout = setTimeout(resolve, ms);
-        // We don't strictly need to clear it here, but checking stopRequested is key
+        resolveSleep = resolve;
+        setTimeout(() => {
+            resolveSleep = null;
+            resolve();
+        }, ms);
     });
 }
 
-/**
- * Renders an array as vertical bars (Sorting/Searching).
- */
 function renderBars(arr, states = {}) {
+    if (stopRequested) return;
     container.innerHTML = "";
     if (!arr || arr.length === 0) return;
     const max = Math.max(...arr);
@@ -182,19 +154,16 @@ function renderBars(arr, states = {}) {
         const bar = document.createElement("div");
         bar.className = "bar";
         bar.style.height = `${(value / max) * 100}%`;
-        
         if (states.comparing?.includes(index)) bar.classList.add("comparing");
         if (states.swapping?.includes(index)) bar.classList.add("swapping");
         if (states.found?.includes(index)) bar.classList.add("found");
         if (states.range && index >= states.range[0] && index <= states.range[1]) {
             bar.classList.add("range-highlight");
         }
-
         const label = document.createElement("div");
         label.className = "bar-label";
         label.innerText = value;
         bar.appendChild(label);
-        
         container.appendChild(bar);
     });
 }
@@ -220,11 +189,9 @@ function renderStack(arr) {
     stackBox.className = "d-flex flex-column-reverse gap-2 p-3 border border-secondary border-top-0";
     stackBox.style.width = "120px";
     stackBox.style.minHeight = "200px";
-
     arr.forEach(val => {
         const item = document.createElement("div");
         item.className = "node w-100 rounded-0";
-        item.style.margin = "0";
         item.innerText = val;
         stackBox.appendChild(item);
     });
@@ -237,11 +204,9 @@ function renderQueue(arr) {
     queueBox.className = "d-flex align-items-center gap-2 p-3 border border-secondary border-start-0 border-end-0";
     queueBox.style.minWidth = "300px";
     queueBox.style.height = "100px";
-
     arr.forEach(val => {
         const item = document.createElement("div");
         item.className = "node";
-        item.style.margin = "0";
         item.innerText = val;
         queueBox.appendChild(item);
     });
@@ -250,7 +215,7 @@ function renderQueue(arr) {
 
 function renderTree() {
     container.innerHTML = "";
-    const treeSvg = `
+    container.innerHTML = `
         <svg width="400" height="300" viewBox="0 0 400 300">
             <line x1="200" y1="50" x2="100" y2="120" stroke="#2dd4bf" stroke-width="2" />
             <line x1="200" y1="50" x2="300" y2="120" stroke="#2dd4bf" stroke-width="2" />
@@ -262,24 +227,17 @@ function renderTree() {
             <text x="300" y="125" fill="white" text-anchor="middle" font-weight="bold">70</text>
         </svg>
     `;
-    container.innerHTML = treeSvg;
 }
 
-/**
- * Handles the execution of algorithms.
- */
 async function executeAlgorithm() {
     if (isExecuting) return;
-    
     const algo = document.getElementById("algorithm-select").value;
     isExecuting = true;
     stopRequested = false;
     abortController = new AbortController();
-
-    // Update UI
-    executeBtn.style.display = 'none';
-    stopBtn.style.display = 'inline-block';
     executeBtn.disabled = true;
+
+    console.log("Starting execution...");
 
     try {
         let steps = [];
@@ -294,69 +252,57 @@ async function executeAlgorithm() {
                     throw new Error("Invalid target");
                 }
             }
-
-            // Fetch steps from backend
             const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrftoken },
                 body: JSON.stringify(body),
                 signal: abortController.signal
             });
-            
-            if (stopRequested) return; // Exit if stopped during fetch
-            
+            if (stopRequested) return;
             const data = await response.json();
             steps = data.steps;
         }
 
-        // Run animation loop
         if (steps && steps.length > 0) {
             for (let step of steps) {
-                if (stopRequested) break;
+                if (stopRequested) {
+                    console.log("Animation loop broken by stop signal.");
+                    break;
+                }
                 renderBars(step.array, step);
                 await sleep(getDelay());
             }
         } else if (currentTab === 'linkedlist') {
-            const newVal = Math.floor(Math.random() * 90) + 10;
-            currentArray.push(newVal);
+            currentArray.push(Math.floor(Math.random() * 90) + 10);
             renderNodes(currentArray);
         } else if (currentTab === 'stackqueue') {
             const newVal = Math.floor(Math.random() * 90) + 10;
-            if (algo === 'stack') {
-                currentArray.push(newVal);
-                renderStack(currentArray);
-            } else {
-                currentArray.push(newVal);
-                renderQueue(currentArray);
-            }
+            currentArray.push(newVal);
+            algo === 'stack' ? renderStack(currentArray) : renderQueue(currentArray);
         }
     } catch (err) {
-        if (err.name === 'AbortError') {
-            console.log('Visualization stopped by user');
-        } else {
-            console.error('Execution error:', err);
-        }
+        if (err.name === 'AbortError') console.log('Fetch aborted.');
+        else console.error('Execution error:', err);
     } finally {
+        console.log("Execution finished/stopped.");
         isExecuting = false;
         stopRequested = false;
         abortController = null;
-        executeBtn.style.display = 'inline-block';
-        stopBtn.style.display = 'none';
         executeBtn.disabled = false;
     }
 }
 
-/**
- * Stops current visualization.
- */
 function stopVisualization() {
+    console.log("Stop button clicked!");
     stopRequested = true;
-    if (abortController) {
-        abortController.abort();
+    if (abortController) abortController.abort();
+    if (resolveSleep) {
+        console.log("Waking up sleep...");
+        resolveSleep();
+        resolveSleep = null;
     }
 }
 
-// Global Initialization
 window.onload = () => {
     initVisualization();
     updateInfo();
