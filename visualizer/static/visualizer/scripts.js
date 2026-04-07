@@ -112,10 +112,7 @@ function updateInfo() {
         document.getElementById('space-comp').innerText = algo.space;
         document.getElementById('algo-explanation').innerText = algo.desc;
         
-        // Update "How it works" Image Trace
-        const traceImg = document.getElementById('algo-trace-img');
         const formattedName = algo.name.replace(/ /g, '+');
-        traceImg.src = `https://via.placeholder.com/400x150/0f172a/10b981?text=${formattedName}+Animation`;
         
         // Update Resource Links
         const resourceLinks = document.getElementById('resource-links').getElementsByTagName('a');
