@@ -124,7 +124,8 @@ function initVisualization() {
             renderQueue(currentArray);
         }
     } else if (currentTab === 'trees') {
-        renderTree();
+        currentArray = [50, 30, 70];
+        renderTree(currentArray);
     }
 }
 
@@ -213,20 +214,86 @@ function renderQueue(arr) {
     container.appendChild(queueBox);
 }
 
-function renderTree() {
+/**
+ * Renders a Binary Search Tree dynamically using SVG.
+ */
+function renderTree(arr) {
     container.innerHTML = "";
-    container.innerHTML = `
-        <svg width="400" height="300" viewBox="0 0 400 300">
-            <line x1="200" y1="50" x2="100" y2="120" stroke="#2dd4bf" stroke-width="2" />
-            <line x1="200" y1="50" x2="300" y2="120" stroke="#2dd4bf" stroke-width="2" />
-            <circle cx="200" cy="50" r="20" fill="#10b981" />
-            <text x="200" y="55" fill="white" text-anchor="middle" font-weight="bold">50</text>
-            <circle cx="100" cy="120" r="20" fill="#10b981" />
-            <text x="100" y="125" fill="white" text-anchor="middle" font-weight="bold">30</text>
-            <circle cx="300" cy="120" r="20" fill="#10b981" />
-            <text x="300" y="125" fill="white" text-anchor="middle" font-weight="bold">70</text>
-        </svg>
-    `;
+    if (!arr || arr.length === 0) return;
+
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("width", "100%");
+    svg.setAttribute("height", "100%");
+    svg.setAttribute("viewBox", "0 0 600 400");
+    container.appendChild(svg);
+
+    // Build BST structure from array
+    let root = null;
+    arr.forEach(val => {
+        root = insertBST(root, val);
+    });
+
+    // Draw tree recursively
+    drawBSTNode(svg, root, 300, 50, 150);
+}
+
+function insertBST(node, val) {
+    if (!node) return { val, left: null, right: null };
+    if (val < node.val) node.left = insertBST(node.left, val);
+    else node.right = insertBST(node.right, val);
+    return node;
+}
+
+function drawBSTNode(svg, node, x, y, xOffset) {
+    if (!node) return;
+
+    const radius = 22;
+    const verticalGap = 70;
+
+    // Draw lines to children
+    if (node.left) {
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", x);
+        line.setAttribute("y1", y);
+        line.setAttribute("x2", x - xOffset);
+        line.setAttribute("y2", y + verticalGap);
+        line.setAttribute("stroke", "#2dd4bf");
+        line.setAttribute("stroke-width", "2");
+        svg.appendChild(line);
+        drawBSTNode(svg, node.left, x - xOffset, y + verticalGap, xOffset / 2);
+    }
+    if (node.right) {
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", x);
+        line.setAttribute("y1", y);
+        line.setAttribute("x2", x + xOffset);
+        line.setAttribute("y2", y + verticalGap);
+        line.setAttribute("stroke", "#2dd4bf");
+        line.setAttribute("stroke-width", "2");
+        svg.appendChild(line);
+        drawBSTNode(svg, node.right, x + xOffset, y + verticalGap, xOffset / 2);
+    }
+
+    // Draw node circle
+    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    circle.setAttribute("cx", x);
+    circle.setAttribute("cy", y);
+    circle.setAttribute("r", radius);
+    circle.setAttribute("fill", "#10b981");
+    circle.setAttribute("stroke", "#2dd4bf");
+    circle.setAttribute("stroke-width", "2");
+    svg.appendChild(circle);
+
+    // Draw node value
+    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    text.setAttribute("x", x);
+    text.setAttribute("y", y + 5);
+    text.setAttribute("fill", "white");
+    text.setAttribute("text-anchor", "middle");
+    text.setAttribute("font-weight", "bold");
+    text.setAttribute("font-size", "14px");
+    text.textContent = node.val;
+    svg.appendChild(text);
 }
 
 async function executeAlgorithm() {
@@ -275,10 +342,10 @@ async function executeAlgorithm() {
         } else if (currentTab === 'linkedlist') {
             currentArray.push(Math.floor(Math.random() * 90) + 10);
             renderNodes(currentArray);
-        } else if (currentTab === 'stackqueue') {
+        } else if (currentTab === 'trees') {
             const newVal = Math.floor(Math.random() * 90) + 10;
             currentArray.push(newVal);
-            algo === 'stack' ? renderStack(currentArray) : renderQueue(currentArray);
+            renderTree(currentArray);
         }
     } catch (err) {
         if (err.name === 'AbortError') console.log('Fetch aborted.');
@@ -321,6 +388,8 @@ function deleteElement() {
         algo === 'stack' ? renderStack(currentArray) : renderQueue(currentArray);
     } else if (currentTab === 'sorting' || currentTab === 'searching') {
         renderBars(currentArray);
+    } else if (currentTab === 'trees') {
+        renderTree(currentArray);
     }
 }
 
