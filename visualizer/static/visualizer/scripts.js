@@ -303,6 +303,27 @@ function stopVisualization() {
     }
 }
 
+/**
+ * Deletes the last element/node from the current visualization.
+ */
+function deleteElement() {
+    if (isExecuting) return;
+    if (currentArray.length === 0) return;
+
+    // Remove the last item
+    currentArray.pop();
+
+    // Re-render based on current tab
+    if (currentTab === 'linkedlist') {
+        renderNodes(currentArray);
+    } else if (currentTab === 'stackqueue') {
+        const algo = document.getElementById("algorithm-select").value;
+        algo === 'stack' ? renderStack(currentArray) : renderQueue(currentArray);
+    } else if (currentTab === 'sorting' || currentTab === 'searching') {
+        renderBars(currentArray);
+    }
+}
+
 window.onload = () => {
     initVisualization();
     updateInfo();
