@@ -4,6 +4,7 @@
 
 let currentTab = 'sorting';
 let currentArray = [];
+let graphEdges = [];
 let isExecuting = false;
 let stopRequested = false;
 let abortController = null;
@@ -138,7 +139,8 @@ function initVisualization() {
     } else if (currentTab === 'graphs') {
         // Initial Graph: Nodes 0-4 with some connections
         currentArray = [0, 1, 2, 3, 4];
-        renderGraph(currentArray);
+        graphEdges = [[0, 1], [1, 2], [2, 3], [3, 4], [4, 0], [0, 2]];
+        renderGraph(currentArray, [], graphEdges);
     }
 }
 
@@ -160,8 +162,8 @@ function renderGraph(nodes, highlighted = [], edges = []) {
         y: centerY + radius * Math.sin((2 * Math.PI * i) / nodes.length)
     }));
 
-    // Draw Edges (Simple adjacency for demo: 0-1, 1-2, 2-3, 3-4, 4-0, 0-2)
-    const connections = [[0,1], [1,2], [2,3], [3,4], [4,0], [0,2]];
+    // Draw Edges
+    const connections = edges.length > 0 ? edges : graphEdges;
     connections.forEach(([u, v]) => {
         if (u < nodes.length && v < nodes.length) {
             const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
@@ -414,20 +416,26 @@ async function executeAlgorithm() {
         } else if (currentTab === 'linkedlist') {
             currentArray.push(Math.floor(Math.random() * 90) + 10);
             renderNodes(currentArray);
+        } else if (currentTab === 'stackqueue') {
+            const newVal = Math.floor(Math.random() * 90) + 10;
+            currentArray.push(newVal);
+            if (algo === 'stack') {
+                renderStack(currentArray);
+            } else {
+                renderQueue(currentArray);
+            }
         } else if (currentTab === 'trees') {
             const newVal = Math.floor(Math.random() * 90) + 10;
             currentArray.push(newVal);
             renderTree(currentArray);
         } else if (currentTab === 'graphs') {
-            // Perform Traversal Animation (BFS or DFS)
-            const traversalOrder = algo === 'bfs' ? [0, 1, 2, 4, 3] : [0, 1, 2, 3, 4]; // Mock orders for demo
-            for (let nodeId of traversalOrder) {
-                if (stopRequested) break;
-                if (nodeId < currentArray.length) {
-                    renderGraph(currentArray, traversalOrder.slice(0, traversalOrder.indexOf(nodeId) + 1));
-                    await sleep(getDelay());
-                }
+            const newNode = currentArray.length;
+            currentArray.push(newNode);
+            if (newNode > 0) {
+                const randomNode = Math.floor(Math.random() * newNode);
+                graphEdges.push([randomNode, newNode]);
             }
+            renderGraph(currentArray, [], graphEdges);
         }
     } catch (err) {
         if (err.name === 'AbortError') console.log('Fetch aborted.');
@@ -473,6 +481,8 @@ function deleteElement() {
     } else if (currentTab === 'trees') {
         renderTree(currentArray);
     } else if (currentTab === 'graphs') {
+        const deletedNode = currentArray.length; // after pop, length is the index of deleted node
+        graphEdges = graphEdges.filter(([u, v]) => u !== deletedNode && v !== deletedNode);
         renderGraph(currentArray);
     }
 }
