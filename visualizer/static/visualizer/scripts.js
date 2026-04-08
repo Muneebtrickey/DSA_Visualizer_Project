@@ -91,8 +91,93 @@ function switchTab(tab, element) {
         select.appendChild(opt);
     });
     document.getElementById('target-input-container').style.display = tab === 'searching' ? 'block' : 'none';
+    
+    // Hide dropdown for graphs since we have separate BFS/DFS buttons
+    const algoSelectContainer = document.getElementById('algo-select-container');
+    if (algoSelectContainer) {
+        algoSelectContainer.style.display = tab === 'graphs' ? 'none' : 'block';
+    }
+
+    // Show BFS/DFS buttons only for graphs
+    const bfsBtn = document.getElementById('bfs-btn');
+    const dfsBtn = document.getElementById('dfs-btn');
+    if (bfsBtn && dfsBtn) {
+        bfsBtn.style.display = tab === 'graphs' ? 'block' : 'none';
+        dfsBtn.style.display = tab === 'graphs' ? 'block' : 'none';
+    }
+
     updateInfo();
     initVisualization();
+}
+
+/**
+ * Executes BFS or DFS traversal on the current graph.
+ */
+async function runTraversal(type) {
+    if (isExecuting || currentArray.length === 0) return;
+    isExecuting = true;
+    stopRequested = false;
+    abortController = new AbortController();
+    
+    // Disable buttons
+    document.getElementById('execute-btn').disabled = true;
+    document.getElementById('bfs-btn').disabled = true;
+    document.getElementById('dfs-btn').disabled = true;
+
+    try {
+        const adj = Array.from({ length: currentArray.length }, () => []);
+        graphEdges.forEach(([u, v]) => {
+            if (u < currentArray.length && v < currentArray.length) {
+                adj[u].push(v);
+                adj[v].push(u);
+            }
+        });
+
+        const visited = new Set();
+        const traversalOrder = [];
+
+        if (type === 'bfs') {
+            const queue = [0];
+            visited.add(0);
+            while (queue.length > 0) {
+                if (stopRequested) break;
+                const node = queue.shift();
+                traversalOrder.push(node);
+                renderGraph(currentArray, [...traversalOrder], graphEdges);
+                await sleep(getDelay());
+
+                for (const neighbor of adj[node]) {
+                    if (!visited.has(neighbor)) {
+                        visited.add(neighbor);
+                        queue.push(neighbor);
+                    }
+                }
+            }
+        } else {
+            const stack = [0];
+            // Standard DFS traversal
+            async function dfs(node) {
+                if (stopRequested || visited.has(node)) return;
+                visited.add(node);
+                traversalOrder.push(node);
+                renderGraph(currentArray, [...traversalOrder], graphEdges);
+                await sleep(getDelay());
+
+                for (const neighbor of adj[node]) {
+                    await dfs(neighbor);
+                }
+            }
+            await dfs(0);
+        }
+    } catch (err) {
+        console.error("Traversal error:", err);
+    } finally {
+        isExecuting = false;
+        stopRequested = false;
+        document.getElementById('execute-btn').disabled = false;
+        document.getElementById('bfs-btn').disabled = false;
+        document.getElementById('dfs-btn').disabled = false;
+    }
 }
 
 function updateInfo() {
