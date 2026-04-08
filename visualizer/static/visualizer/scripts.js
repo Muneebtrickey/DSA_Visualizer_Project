@@ -62,6 +62,15 @@ const metadata = {
         algos: [
             { id: 'bst', name: 'BST Operations', time: 'O(log n)', space: 'O(n)', desc: 'A node-based tree data structure where each node has at most two children.' }
         ]
+    },
+    graphs: {
+        title: "Graph Visualizer",
+        desc: "Visualizing nodes and edges with traversal algorithms.",
+        resource: "https://www.geeksforgeeks.org/graph-data-structure-and-algorithms/",
+        algos: [
+            { id: 'bfs', name: 'Breadth-First Search', time: 'O(V+E)', space: 'O(V)', desc: 'Explores all neighbor nodes at the present depth before moving to nodes at the next depth level.' },
+            { id: 'dfs', name: 'Depth-First Search', time: 'O(V+E)', space: 'O(V)', desc: 'Explores as far as possible along each branch before backtracking.' }
+        ]
     }
 };
 
@@ -126,7 +135,70 @@ function initVisualization() {
     } else if (currentTab === 'trees') {
         currentArray = [50, 30, 70];
         renderTree(currentArray);
+    } else if (currentTab === 'graphs') {
+        // Initial Graph: Nodes 0-4 with some connections
+        currentArray = [0, 1, 2, 3, 4];
+        renderGraph(currentArray);
     }
+}
+
+/**
+ * Renders a Graph using SVG.
+ */
+function renderGraph(nodes, highlighted = [], edges = []) {
+    container.innerHTML = "";
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("width", "100%");
+    svg.setAttribute("height", "100%");
+    svg.setAttribute("viewBox", "0 0 600 400");
+    container.appendChild(svg);
+
+    // Fixed positions for nodes in a circle for clarity
+    const centerX = 300, centerY = 200, radius = 120;
+    const positions = nodes.map((_, i) => ({
+        x: centerX + radius * Math.cos((2 * Math.PI * i) / nodes.length),
+        y: centerY + radius * Math.sin((2 * Math.PI * i) / nodes.length)
+    }));
+
+    // Draw Edges (Simple adjacency for demo: 0-1, 1-2, 2-3, 3-4, 4-0, 0-2)
+    const connections = [[0,1], [1,2], [2,3], [3,4], [4,0], [0,2]];
+    connections.forEach(([u, v]) => {
+        if (u < nodes.length && v < nodes.length) {
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute("x1", positions[u].x);
+            line.setAttribute("y1", positions[u].y);
+            line.setAttribute("x2", positions[v].x);
+            line.setAttribute("y2", positions[v].y);
+            line.setAttribute("stroke", "#1e293b");
+            line.setAttribute("stroke-width", "2");
+            svg.appendChild(line);
+        }
+    });
+
+    // Draw Nodes
+    nodes.forEach((node, i) => {
+        const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("cx", positions[i].x);
+        circle.setAttribute("cy", positions[i].y);
+        circle.setAttribute("r", 20);
+        circle.setAttribute("fill", highlighted.includes(i) ? "#f59e0b" : "#10b981");
+        circle.setAttribute("stroke", "#2dd4bf");
+        circle.setAttribute("stroke-width", "2");
+        g.appendChild(circle);
+
+        const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+        text.setAttribute("x", positions[i].x);
+        text.setAttribute("y", positions[i].y + 5);
+        text.setAttribute("fill", "white");
+        text.setAttribute("text-anchor", "middle");
+        text.setAttribute("font-weight", "bold");
+        text.textContent = i;
+        g.appendChild(text);
+
+        svg.appendChild(g);
+    });
 }
 
 function getDelay() {
@@ -346,6 +418,16 @@ async function executeAlgorithm() {
             const newVal = Math.floor(Math.random() * 90) + 10;
             currentArray.push(newVal);
             renderTree(currentArray);
+        } else if (currentTab === 'graphs') {
+            // Perform Traversal Animation (BFS or DFS)
+            const traversalOrder = algo === 'bfs' ? [0, 1, 2, 4, 3] : [0, 1, 2, 3, 4]; // Mock orders for demo
+            for (let nodeId of traversalOrder) {
+                if (stopRequested) break;
+                if (nodeId < currentArray.length) {
+                    renderGraph(currentArray, traversalOrder.slice(0, traversalOrder.indexOf(nodeId) + 1));
+                    await sleep(getDelay());
+                }
+            }
         }
     } catch (err) {
         if (err.name === 'AbortError') console.log('Fetch aborted.');
@@ -390,6 +472,8 @@ function deleteElement() {
         renderBars(currentArray);
     } else if (currentTab === 'trees') {
         renderTree(currentArray);
+    } else if (currentTab === 'graphs') {
+        renderGraph(currentArray);
     }
 }
 
