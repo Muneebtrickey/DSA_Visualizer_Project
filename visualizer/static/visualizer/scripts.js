@@ -5,6 +5,7 @@
 let currentTab = 'sorting';
 let currentArray = [];
 let graphEdges = [];
+let nodePositions = []; // Persistent positions for graph nodes
 let isExecuting = false;
 let stopRequested = false;
 let abortController = null;
@@ -225,6 +226,14 @@ function initVisualization() {
         // Initial Graph: Nodes 0-4 with some connections
         currentArray = [0, 1, 2, 3, 4];
         graphEdges = [[0, 1], [1, 2], [2, 3], [3, 4], [4, 0], [0, 2]];
+        
+        // Initialize persistent positions in a circle for the first 5 nodes
+        const centerX = 300, centerY = 200, radius = 120;
+        nodePositions = currentArray.map((_, i) => ({
+            x: centerX + radius * Math.cos((2 * Math.PI * i) / currentArray.length),
+            y: centerY + radius * Math.sin((2 * Math.PI * i) / currentArray.length)
+        }));
+        
         renderGraph(currentArray, [], graphEdges);
     }
 }
@@ -240,12 +249,16 @@ function renderGraph(nodes, highlighted = [], edges = []) {
     svg.setAttribute("viewBox", "0 0 600 400");
     container.appendChild(svg);
 
-    // Fixed positions for nodes in a circle for clarity
-    const centerX = 300, centerY = 200, radius = 120;
-    const positions = nodes.map((_, i) => ({
-        x: centerX + radius * Math.cos((2 * Math.PI * i) / nodes.length),
-        y: centerY + radius * Math.sin((2 * Math.PI * i) / nodes.length)
-    }));
+    // Use persistent positions if available, otherwise initialize them in a circle
+    if (!nodePositions || nodePositions.length !== nodes.length) {
+        const centerX = 300, centerY = 200, radius = 120;
+        nodePositions = nodes.map((_, i) => ({
+            x: centerX + radius * Math.cos((2 * Math.PI * i) / nodes.length),
+            y: centerY + radius * Math.sin((2 * Math.PI * i) / nodes.length)
+        }));
+    }
+    
+    const positions = nodePositions;
 
     // Draw Edges
     const connections = edges.length > 0 ? edges : graphEdges;
@@ -519,6 +532,17 @@ async function executeAlgorithm() {
             if (newNode > 0) {
                 const randomNode = Math.floor(Math.random() * newNode);
                 graphEdges.push([randomNode, newNode]);
+                
+                // Assign new position near the connected node
+                const parentPos = nodePositions[randomNode];
+                const angle = Math.random() * 2 * Math.PI;
+                const dist = 70 + Math.random() * 30;
+                nodePositions.push({
+                    x: Math.max(40, Math.min(560, parentPos.x + dist * Math.cos(angle))),
+                    y: Math.max(40, Math.min(360, parentPos.y + dist * Math.sin(angle)))
+                });
+            } else {
+                nodePositions.push({ x: 300, y: 200 });
             }
             renderGraph(currentArray, [], graphEdges);
         }
@@ -568,6 +592,7 @@ function deleteElement() {
     } else if (currentTab === 'graphs') {
         const deletedNode = currentArray.length; // after pop, length is the index of deleted node
         graphEdges = graphEdges.filter(([u, v]) => u !== deletedNode && v !== deletedNode);
+        nodePositions.pop(); // Maintain sync with currentArray
         renderGraph(currentArray);
     }
 }
